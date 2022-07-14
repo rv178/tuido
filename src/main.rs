@@ -101,11 +101,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     loop {
         terminal.draw(|f| ui(f, &app))?;
 
+        let time = chrono::Local::now().format("%B %d %I:%M %p");
+
         if let Event::Key(key) = event::read()? {
             match key.code {
                 KeyCode::Enter => {
                     if !app.input.is_empty() {
-                        app.todos.push(app.input.drain(..).collect());
+                        app.todos.push(format!(
+                            "{} [{}]",
+                            app.input.drain(..).collect::<String>(),
+                            time
+                        ));
                     }
                 }
                 KeyCode::Up => {
@@ -125,7 +131,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                     app.input.pop();
                 }
                 KeyCode::Tab => {
-                    app.todos.remove(app.index);
+                    if !app.todos.is_empty() {
+                        app.todos.remove(app.index);
+                    }
                 }
                 KeyCode::Esc => {
                     let json = serde_json::to_vec(&app.todos)?;
@@ -184,7 +192,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         f.render_widget(help_message, chunks[0]);
 
         let input = Paragraph::new(app.input.as_ref())
-            .block(Block::default().borders(Borders::ALL).title("Input"));
+            .block(Block::default().borders(Borders::ALL).title("Add a TODO"));
         f.render_widget(input, chunks[1]);
         f.set_cursor(chunks[1].x + app.input.width() as u16 + 1, chunks[1].y + 1);
 
@@ -204,12 +212,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         let todos = List::new(todos)
             .block(Block::default().borders(Borders::ALL).title("Todo(s)"))
             .style(Style::default().fg(Color::White))
-            .highlight_style(
-                Style::default()
-                    .add_modifier(Modifier::BOLD)
-                    .bg(Color::Green)
-                    .fg(Color::Black),
-            )
+            .highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White))
             .highlight_symbol("> ");
         f.render_stateful_widget(todos, chunks[2], &mut state);
     }
