@@ -132,7 +132,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 }
                 KeyCode::Tab => {
                     if !app.todos.is_empty() {
-                        app.todos.remove(app.index);
+                        if app.index < app.todos.len() {
+                            app.todos.remove(app.index);
+                        } else {
+                            app.index = app.todos.len() - 1;
+                        }
                     }
                 }
                 KeyCode::Esc => {
