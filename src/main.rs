@@ -7,10 +7,10 @@ use serde_derive::{Deserialize, Serialize};
 use std::{error::Error, fs, io};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph},
     Frame, Terminal,
 };
 use unicode_width::UnicodeWidthStr;
@@ -20,6 +20,7 @@ struct App {
     input: String,
     todos: Vec<String>,
     index: usize,
+    show_popup: bool,
 }
 
 impl App {
@@ -28,6 +29,7 @@ impl App {
             input: String::new(),
             todos: Vec::new(),
             index: 0,
+            show_popup: false,
         }
     }
     fn next(&mut self) {
@@ -112,6 +114,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                             app.input.drain(..).collect::<String>(),
                             time
                         ));
+                    } else {
+                        app.show_popup = !app.show_popup
                     }
                 }
                 KeyCode::Up => {
@@ -219,5 +223,41 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
             .highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White))
             .highlight_symbol("> ");
         f.render_stateful_widget(todos, chunks[2], &mut state);
+
+        if app.index < app.todos.len() {
+            if app.show_popup {
+                let block = Paragraph::new(format!("{}", app.todos[app.index]))
+                    .block(Block::default().borders(Borders::ALL).title("More info"));
+                let area = centered_rect(60, 20, f.size());
+                f.render_widget(Clear, area); //this clears out the background
+                f.render_widget(block, area);
+            }
+        }
     }
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }
