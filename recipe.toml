@@ -30,11 +30,6 @@ cp -r ./target/release/$BIN_NAME ./bin/$BIN_NAME
 """
 run = false
 
-[[custom]]
-name = "docs"
-cmd = "pandoc docs/baker.1.md -s -t man -o docs/baker.1"
-run = false
-
 [[pre]]
 name = "fmt"
 cmd = "cargo fmt"
