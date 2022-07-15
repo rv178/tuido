@@ -15,23 +15,24 @@ cd contrib/
 makepkg -si
 ```
 
-### Compiling
-
-You can compile it using `cargo` or install [baker](https://github.com/rv178/baker) and compile it like this:
+You can compile it using `cargo` or install [baker](https://github.com/rv178/baker) and install it like this:
 
 ```
 bake setup
-bake release
+bake
+sudo bake install
 ```
 
 A binary will be copied to `./bin/tuido`
 
+### Uninstalling
+
+```
+sudo bake uninstall
+```
+
 ### Usage
 
-#### FEN string parsing
-
 ```
-cranium --fen "<FEN_STRING>"
+tuido
 ```
-
-#### Note: this project is a WIP
